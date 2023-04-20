@@ -24,8 +24,8 @@ chmod 777 /sys/class/power_supply/*/*
 # copy this /sys/class/power_supply/
 
 
-
-MAX_MA=500000
+LOW_MA=500000
+MAX_MA=3000000
 DEFAULT_MA=`cat /sys/class/power_supply/main/current_max`
 INCASE_MA=2450000
 DISCHARGING='Discharging'
@@ -39,24 +39,27 @@ echo '150' > /sys/class/power_supply/bms/temp_cool
 echo '450' > /sys/class/power_supply/bms/temp_hot
 echo '450' > /sys/class/power_supply/bms/temp_warm
 
+charge_by(){
+    echo $MAX_MA > /sys/class/power_supply/main/current_max
+    echo $MAX_MA > /sys/class/power_supply/usb/current_max
+    echo $1 > /sys/class/power_supply/main/constant_charge_current_max
+    echo $1 > /sys/class/power_supply/battery/constant_charge_current_max
+    echo $1 > /sys/class/power_supply/battery/max_charge_current
+}
+
+
 function idle_charge {
-echo $INCASE_MA > /sys/class/power_supply/main/current_max
-echo $INCASE_MA > /sys/class/power_supply/usb/current_max
-echo '0' > /sys/class/power_supply/main/constant_charge_current_max
-sleep 3
+    charge_by 0
+    sleep 3
 }
 
 function normal_charge {
-echo $MAX_MA > /sys/class/power_supply/main/current_max
-echo $INCASE_MA > /sys/class/power_supply/usb/current_max
-echo $MAX_MA > /sys/class/power_supply/main/constant_charge_current_max
-sleep 0.5
+    charge_by $LOW_MA
+    sleep 0.2
 }
 
 function unplugged (){
-echo $INCASE_MA > /sys/class/power_supply/main/current_max
-echo $INCASE_MA > /sys/class/power_supply/usb/current_max
-echo $INCASE_MA > /sys/class/power_supply/main/constant_charge_current_max
+    charge_by $INCASE_MA
 }
 
 N=4
